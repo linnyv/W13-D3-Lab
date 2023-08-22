@@ -5,7 +5,6 @@ class New extends React.Component {
     return (
         <div>
             <h1>New Fruit page</h1>
-            {/* NOTE: action will be the route, method will be the HTTP verb */}
             <form action="/fruits" method="POST">
               Name: <input type="text" name="name" /><br/>
               Color: <input type="text" name="color" /><br/>

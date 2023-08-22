@@ -1,82 +1,122 @@
+require('dotenv').config();
 const express = require('express')
 const app = express();
+const mongoose = require('mongoose');
 
-const fruits = require('./models/fruits.js');
+const Fruit = require('./models/Fruit.js');
+const Vegetable = require('./models/Veggie.js');
 
-const vegetables = require('./models/vegetables.js');
-
-
+app.use(express.urlencoded({extended:true}));
 app.set('view engine', 'jsx');
 app.engine('jsx', require('express-react-views').createEngine());
 
+mongoose.connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
 
-app.use(express.urlencoded({extended:false}));
+mongoose.connection.once('open', () => {
+    console.log('connected to mongo')
+});
 
 //////INDEX
 app.get('/',  (req, res) => {
     res.send('<h1>Hello WISE!</h1>')
 })
 
-//////FRUIT INDEX
+///FRUIT INDEX
 app.get('/fruits', (req, res) => {
+    Fruit.find ({}).then((allFruits) => {
+        console.log(allFruits);
     res.render('./fruits/index', {
-        fruits: fruits
+        fruits: allFruits
     });
+  })
+  .catch(error => {
+    console.error(error)
+  });
 });
 
-//////VEGETABLES INDEX
+///VEGETABLES INDEX
 app.get('/vegetables', (req, res) => {
+    Vegetable.find ({}).then((allVegetables) => {
+        console.log(allVegetables);
     res.render('./vegetables/index', {
-        vegetables: vegetables
+        vegetables: allVegetables
     });
+   })
+   .catch(error => {
+     console.error(error)
+   });
 });
 
 ///////NEW
-//Page with form to create a new fruit
+///NEW FRUIT
 app.get('/fruits/new', (req, res) => {
     res.render('./fruits/new');
 });
 
-//Page with form to create a new veggie
+///NEW VEGGIE
 app.get('/vegetables/new', (req, res) => {
     res.render('./vegetables/new');
 });
 
-//////SHOW
-app.get('/fruits/:indexOfFruitsArray', (req, res) => {
-    res.render('./fruits/show', {
-        fruit: fruits[req.params.indexOfFruitsArray]
-    });
-
-});
-
-app.get('/vegetables/:indexOfVegetablesArray', (req, res) => {
-    res.render('./vegetables/show', {
-        vegetables: vegetables[req.params.indexOfVegetablesArray]
-    });
-
-});
-
 //////CREATE
-//Post Route
+///CREATE FRUIT
 app.post('/fruits', (req, res)=>{
     if(req.body.readyToEat === 'on'){ 
         req.body.readyToEat = true;
     } else { 
         req.body.readyToEat = false;
     }
-    fruits.push(req.body);
-    res.redirect('/fruits'); 
+    Fruit.create(req.body).then((createdFruit) => {
+       res.redirect('/fruits')
+       res.send(createdFruit);
+    })
+    .catch(error => {
+        console.error(error)
+    })
 });
 
+///CREATE VEGGIE
 app.post('/vegetables', (req, res)=>{
     if(req.body.readyToEat === 'on'){ 
         req.body.readyToEat = true;
     } else { 
         req.body.readyToEat = false;
     }
-    fruits.push(req.body);
-    res.redirect('/vegetables'); 
+    Vegetable.create(req.body).then((createdVegetable) => {
+        res.redirect('/vegetables')
+        res.send(createdVegetable);
+    })
+    .catch(error => {
+        console.error(error)
+    })
+});
+
+//////SHOW
+///SHOW FRUIT
+app.get('/fruits/:id', (req, res) => {
+    Fruit.findOne({_id: req.params.id}).then((foundFruit) => {
+    res.render('./fruits/show', {
+        fruit: foundFruit
+    })
+    })
+    .catch(error => {
+        console.error(error)
+    })
+});
+
+///SHOW VEGETABLE
+app.get('/vegetables/:id', (req, res) => {
+    Vegetable.findOne({_id: req.params.id}).then((foundVegetable) => { 
+    res.render('./vegetables/Show', {
+        vegetable: foundVegetable
+    })
+    })
+    .catch(error => {
+        console.error(error)
+    })
 });
 
 app.use((req, res, next) => {
